@@ -4,7 +4,7 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
   const port = app.get(ConfigService).get<number>('app.port') ?? 3001;
 
   app.useGlobalPipes(

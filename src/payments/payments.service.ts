@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 import { CreatePaymentSessionDto } from './dto/create-payment-session.dto';
+import { StripeWebhookDto } from './dto/stripe-webhook.dto';
 
 @Injectable()
 export class PaymentsService {
@@ -34,7 +35,32 @@ export class PaymentsService {
     });
   }
 
-  webhook() {
-    return 'webhook';
+  stripeWebhook(stripeWebhookDto: StripeWebhookDto) {
+    const { payload, signature } = stripeWebhookDto;
+    if (!payload || !signature) {
+      throw new BadRequestException('Payload and signature are required');
+    }
+
+    const endpointSecret =
+      this.configService.get<string>('stripe.webhookSecret') || '';
+
+    let event: Stripe.Event;
+
+    try {
+      event = this.stripe.webhooks.constructEvent(
+        payload,
+        signature,
+        endpointSecret,
+      );
+    } catch (err) {
+      const message =
+        err instanceof Stripe.errors.StripeSignatureVerificationError
+          ? err.message
+          : 'Unknown error occurred while creating webhook event';
+
+      throw new BadRequestException(message);
+    }
+
+    return event;
   }
 }
