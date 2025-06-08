@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 import { CreatePaymentSessionDto } from './dto/create-payment-session.dto';
@@ -7,17 +7,20 @@ import { StripeWebhookDto } from './dto/stripe-webhook.dto';
 @Injectable()
 export class PaymentsService {
   private readonly stripe: Stripe;
+  private readonly logger = new Logger(PaymentsService.name);
 
   constructor(private configService: ConfigService) {
     this.stripe = new Stripe(this.configService.get('stripe.secretKey') || '');
   }
 
   createSession(createPaymentSessionDto: CreatePaymentSessionDto) {
-    const { currency, items } = createPaymentSessionDto;
+    const { orderId, currency, items } = createPaymentSessionDto;
 
     return this.stripe.checkout.sessions.create({
       payment_intent_data: {
-        metadata: {},
+        metadata: {
+          orderId,
+        },
       },
       line_items: items.map((item) => ({
         price_data: {
@@ -61,6 +64,14 @@ export class PaymentsService {
       throw new BadRequestException(message);
     }
 
-    return event;
+    switch (event.type) {
+      case 'charge.succeeded':
+        this.logger.log(
+          `Charge succeeded: ${event.data.object.metadata.orderId}`,
+        );
+        break;
+      default:
+        this.logger.warn(`Unhandled event type: ${event.type}`);
+    }
   }
 }
