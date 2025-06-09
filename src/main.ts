@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { AsyncMicroserviceOptions, Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { rawBody: true });
@@ -13,6 +14,16 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+
+  app.connectMicroservice<AsyncMicroserviceOptions>({
+    useFactory: (configService: ConfigService) => ({
+      transport: Transport.NATS,
+      options: {
+        servers: configService.get('transport.nats.servers'),
+      },
+    }),
+    inject: [ConfigService],
+  });
 
   await app.listen(port);
 

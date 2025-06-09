@@ -5,6 +5,7 @@ env STRIPE_SECRET_KEY=
 env STRIPE_SUCCESS_URL="http://localhost:3001/payments/successful"
 env STRIPE_CANCEL_URL="http://localhost:3001/payments/canceled"
 env STRIPE_WEBHOOK_SECRET=
+env NATS_SERVERS="nats://localhost:4222"
 
 WORKDIR /usr/src/app
 

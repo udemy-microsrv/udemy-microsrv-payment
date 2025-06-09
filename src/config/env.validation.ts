@@ -6,4 +6,5 @@ export default Joi.object({
   STRIPE_SUCCESS_URL: Joi.string().required(),
   STRIPE_CANCEL_URL: Joi.string().required(),
   STRIPE_WEBHOOK_SECRET: Joi.string().required(),
+  NATS_SERVERS: Joi.string().required(),
 }).unknown(true);
