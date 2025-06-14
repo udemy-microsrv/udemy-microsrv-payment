@@ -15,16 +15,20 @@ async function bootstrap() {
     }),
   );
 
-  app.connectMicroservice<AsyncMicroserviceOptions>({
-    useFactory: (configService: ConfigService) => ({
-      transport: Transport.NATS,
-      options: {
-        servers: configService.get('transport.nats.servers'),
-      },
-    }),
-    inject: [ConfigService],
-  });
+  app.connectMicroservice<AsyncMicroserviceOptions>(
+    {
+      useFactory: (configService: ConfigService) => ({
+        transport: Transport.NATS,
+        options: {
+          servers: configService.get('transport.nats.servers'),
+        },
+      }),
+      inject: [ConfigService],
+    },
+    { inheritAppConfig: true },
+  );
 
+  await app.startAllMicroservices();
   await app.listen(port);
 
   const logger = new Logger('boostrap');

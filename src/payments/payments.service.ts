@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 import { CreatePaymentSessionDto } from './dto/create-payment-session.dto';
 import { StripeWebhookDto } from './dto/stripe-webhook.dto';
+import { PaymentSessionSummaryDto } from './dto/payment-session-summary.dto';
 
 @Injectable()
 export class PaymentsService {
@@ -13,29 +14,37 @@ export class PaymentsService {
     this.stripe = new Stripe(this.configService.get('stripe.secretKey') || '');
   }
 
-  createSession(createPaymentSessionDto: CreatePaymentSessionDto) {
+  createSession(
+    createPaymentSessionDto: CreatePaymentSessionDto,
+  ): Promise<PaymentSessionSummaryDto> {
     const { orderId, currency, items } = createPaymentSessionDto;
 
-    return this.stripe.checkout.sessions.create({
-      payment_intent_data: {
-        metadata: {
-          orderId,
-        },
-      },
-      line_items: items.map((item) => ({
-        price_data: {
-          currency: currency,
-          product_data: {
-            name: item.name,
+    return this.stripe.checkout.sessions
+      .create({
+        payment_intent_data: {
+          metadata: {
+            orderId,
           },
-          unit_amount: Math.round(item.price * 100),
         },
-        quantity: item.quantity,
-      })),
-      mode: 'payment',
-      success_url: this.configService.get('stripe.successUrl'),
-      cancel_url: this.configService.get('stripe.cancelUrl'),
-    });
+        line_items: items.map((item) => ({
+          price_data: {
+            currency: currency,
+            product_data: {
+              name: item.name,
+            },
+            unit_amount: Math.round(item.price * 100),
+          },
+          quantity: item.quantity,
+        })),
+        mode: 'payment',
+        success_url: this.configService.get('stripe.successUrl'),
+        cancel_url: this.configService.get('stripe.cancelUrl'),
+      })
+      .then((session) => ({
+        successUrl: session.success_url,
+        cancelUrl: session.cancel_url,
+        paymentUrl: session.url,
+      }));
   }
 
   stripeWebhook(stripeWebhookDto: StripeWebhookDto) {

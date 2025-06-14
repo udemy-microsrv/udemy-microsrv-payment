@@ -1,5 +1,4 @@
 import {
-  Body,
   Controller,
   Get,
   HttpCode,
@@ -12,13 +11,14 @@ import { PaymentsService } from './payments.service';
 import { CreatePaymentSessionDto } from './dto/create-payment-session.dto';
 import { StripeWebhookDto } from './dto/stripe-webhook.dto';
 import { Request } from 'express';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
-  @Post('create-session')
-  createSession(@Body() createPaymentSessionDto: CreatePaymentSessionDto) {
+  @MessagePattern('payments.create_session')
+  createSession(@Payload() createPaymentSessionDto: CreatePaymentSessionDto) {
     return this.paymentsService.createSession(createPaymentSessionDto);
   }
 
