@@ -1,6 +1,6 @@
 {
   "name": "udemy-microsrv-payment",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Microservice and Rest API for managing payments",
   "author": "Sebastian Torres Cabrera <sebastian.torres0426@gmail.com> (https://github.com/sebasbit)",
   "private": true,
